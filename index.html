@@ -28,11 +28,11 @@ button{background:none;border:0;cursor:pointer}
 .top h1{font-size:18px;font-weight:700;letter-spacing:.02em}
 
 /* 메뉴 */
-.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);
   opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}
 .scrim.on{opacity:1;pointer-events:auto}
 .drawer{position:fixed;top:0;bottom:0;left:0;width:min(300px,82vw);background:var(--surface);border-right:1px solid var(--line);
-  transform:translateX(-100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);z-index:30;padding:calc(env(safe-area-inset-top,0) + 16px) 12px 16px;display:flex;flex-direction:column;gap:2px}
+  transform:translateX(-100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);z-index:30;will-change:transform;padding:calc(env(safe-area-inset-top,0) + 16px) 12px 16px;display:flex;flex-direction:column;gap:2px}
 .drawer.on{transform:none}
 .drawer .brand{font-size:20px;font-weight:700;padding:8px 12px 16px}
 .nav{display:block;width:100%;text-align:left;padding:12px;border-radius:12px;font-size:16px;color:var(--mute)}
@@ -62,33 +62,54 @@ h2{font-size:22px;margin-bottom:16px}
 .shortcut span{color:var(--mute);font-size:14px}
 
 /* AI */
-#v-ai{padding:0;display:none;flex-direction:column}
+#v-ai{padding:0;display:none;flex-direction:column;background:var(--surface)}
 #v-ai.on{display:flex}
-.tabs{display:flex;align-items:center;gap:6px;padding:8px 12px;overflow-x:auto;flex:none;border-bottom:1px solid var(--line)}
-.tab{display:flex;align-items:center;gap:4px;flex:none;max-width:180px;padding:6px 6px 6px 14px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
-.tab span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tab.on{background:var(--acc);border-color:var(--acc);color:var(--accfg);font-weight:700}
-.tab .x{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:none;line-height:1}
+.tabs{display:flex;align-items:flex-end;gap:2px;padding:8px 8px 0;overflow-x:auto;flex:none;background:var(--bg);scrollbar-width:none}
+.tab{flex:0 1 200px;min-width:100px;height:38px;display:flex;align-items:center;gap:4px;padding:0 6px 0 14px;border-radius:10px 10px 0 0;color:var(--mute);cursor:pointer}
+.tab:hover{background:#111}
+.tab span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.tab.on{background:var(--surface);color:var(--fg);box-shadow:inset 0 2px 0 var(--acc)}
+.tab .x{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:none;line-height:1;color:inherit}
 .tab .x:hover{background:rgba(128,128,128,.35)}
-.add{flex:none;width:36px;height:36px;border-radius:50%;border:1px dashed var(--mute);color:var(--mute);font-size:20px}
-.add:hover{color:var(--acc);border-color:var(--acc)}
-.chatbar{display:flex;align-items:center;gap:8px;padding:8px 16px;flex:none;color:var(--mute);font-size:14px}
-.chatbar select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
-.chatbar .clear{margin-left:auto;color:var(--mute);padding:6px 10px;border-radius:10px}
-.chatbar .clear:hover{background:var(--surface);color:var(--fg)}
-.msgs{flex:1;min-height:0;overflow-y:auto;padding:8px 16px 16px}
-.msgs .in{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.add{flex:none;width:34px;height:34px;margin:0 0 2px 4px;border-radius:50%;color:var(--mute);font-size:20px}
+.add:hover{background:var(--surface);color:var(--acc)}
+.chatbar{display:flex;align-items:center;gap:8px;padding:8px max(16px,calc((100% - 760px)/2));flex:none;color:var(--mute);font-size:14px}
+.chatbar select{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.chatbar .clear{margin-left:auto;padding:6px 10px;border-radius:10px;color:var(--mute)}
+.chatbar .clear:hover{background:var(--bg);color:var(--fg)}
+.msgs{flex:1;min-height:0;overflow-y:auto;padding:8px max(16px,calc((100% - 760px)/2)) 16px}
+.msgs .in{display:flex;flex-direction:column;gap:12px;min-height:100%}
 .msg{max-width:88%;padding:10px 14px;border-radius:16px;white-space:pre-wrap;word-break:break-word}
 .msg.u{align-self:flex-end;background:var(--acc);color:var(--accfg);border-bottom-right-radius:4px}
-.msg.a{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.a{align-self:flex-start;background:#1f1f1f;border:1px solid var(--line);border-bottom-left-radius:4px}
 .msg.e{border-color:#a33;color:#ff9a9a}
-.empty{margin:auto;text-align:center;color:var(--mute);padding:40px 0}
-.inputbar{display:flex;gap:8px;padding:8px 16px 12px;flex:none;border-top:1px solid var(--line)}
-.inputbar .row{max-width:760px;margin:0 auto;width:100%;display:flex;gap:8px;align-items:flex-end}
-.inputbar textarea{flex:1;resize:none;max-height:140px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 14px}
+.msg.w{color:var(--mute)}
+.empty{margin:auto;text-align:center;color:var(--mute)}
+.inputbar{flex:none;padding:8px max(16px,calc((100% - 760px)/2)) 12px;border-top:1px solid var(--line)}
+.inputbar .row{display:flex;gap:8px;align-items:flex-end;width:100%}
+.inputbar textarea{flex:1;resize:none;max-height:140px;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:10px 14px}
 .send{height:44px;padding:0 20px;border-radius:16px;background:var(--acc);color:var(--accfg);font-weight:700}
 .send:disabled{opacity:.4;cursor:default}
-
+/* 타이머 */
+.tcard{text-align:center}
+.big{font-size:clamp(44px,13vw,72px);font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2;margin:8px 0}
+.trow{display:flex;gap:8px;justify-content:center;margin:12px 0}
+.trow .field{width:auto;min-width:140px}
+.tbtn{width:100%;max-width:320px;height:56px;font-size:18px;margin-top:8px}
+.tbtn.run{background:#fff}
+.chk{display:flex;align-items:center;justify-content:center;gap:8px;font-weight:400;color:var(--mute);margin-top:14px}
+.cnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cw{text-align:center;color:var(--mute);font-size:13px}
+.cd{min-height:52px;border-radius:10px;border:1px solid var(--line);padding:4px;display:flex;flex-direction:column;align-items:center;font-size:14px;color:var(--fg)}
+.cd i{font-style:normal}
+.cd small{font-size:10px;line-height:1.2}
+.cd.today{border-color:var(--fg)}
+.cd.sel{outline:2px solid var(--acc);outline-offset:1px}
+.logrow{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.logrow span{flex:1}
+.sm{padding:6px 12px;border-radius:10px;border:1px solid var(--line);color:var(--fg)}
+.sm:hover{border-color:var(--acc)}
 /* 설정 */
 label{display:block;margin:16px 0 6px;font-weight:700}
 .field{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
@@ -131,7 +152,7 @@ label{display:block;margin:16px 0 6px;font-weight:700}
       <div class="card quote"><p id="qtext"></p><small id="qsrc"></small></div>
       <div class="shortcuts">
         <button class="shortcut" data-go="ai"><b>AI에게 질문</b><span>탭으로 여러 대화</span></button>
-        <button class="shortcut" data-go="timer"><b>순공 타이머</b><span>준비 중</span></button>
+        <button class="shortcut" data-go="timer"><b>순공 타이머</b><span>시작/정지 · 달력</span></button>
         <button class="shortcut" data-go="mock"><b>모의고사</b><span>준비 중</span></button>
         <button class="shortcut" data-go="plan"><b>주간 일정표</b><span>준비 중</span></button>
       </div>
@@ -152,7 +173,21 @@ label{display:block;margin:16px 0 6px;font-weight:700}
     </div></div>
   </section>
 
-  <section class="view" id="v-timer"><div class="wrap"><h2>순공 타이머</h2><div class="card muted">다음 버전에서 추가됩니다.</div></div></section>
+  <section class="view" id="v-timer"><div class="wrap">
+    <div class="card tcard">
+      <div class="muted" id="tToday"></div>
+      <div class="big" id="tNow">00:00:00</div>
+      <div class="hint" id="tWarn"></div>
+      <div class="trow"><select class="field" id="tSubj"></select><button class="sm" id="tAdd">과목 추가</button></div>
+      <button class="send tbtn" id="tBtn">시작</button>
+      <label class="chk"><input type="checkbox" id="tWake"> 측정 중 화면 켜 두기</label>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="cnav"><button class="sm" id="cPrev" aria-label="이전 달">&lt;</button><b id="cTitle"></b><button class="sm" id="cNext" aria-label="다음 달">&gt;</button></div>
+      <div class="cgrid" id="cGrid"></div>
+      <div id="cDay" style="margin-top:16px"></div>
+    </div>
+  </div></section>
   <section class="view" id="v-mock"><div class="wrap"><h2>모의고사</h2><div class="card muted">다음 버전에서 추가됩니다.</div></div></section>
   <section class="view" id="v-plan"><div class="wrap"><h2>주간 일정표</h2><div class="card muted">다음 버전에서 추가됩니다.</div></div></section>
 
@@ -171,6 +206,8 @@ label{display:block;margin:16px 0 6px;font-weight:700}
         <label for="mGroq">Groq 모델 이름</label>
         <input class="field" id="mGroq" autocomplete="off">
         <p class="hint">모델 이름이 바뀌어 오류가 나면 각 서비스 문서에서 현재 이름을 확인해 여기에 입력하세요.</p>
+        <label for="cut">하루 시작 시각(시, 타이머 기록 기준)</label>
+        <input class="field" id="cut" type="number" min="0" max="12">
         <button class="btn" id="saveKeys">저장</button>
       </div>
       <div class="card" style="margin-top:16px">
@@ -204,6 +241,7 @@ function go(name){
   drawer(false);
   if(name === 'ai') renderAI();
   if(name === 'settings') renderSettings();
+  if(name === 'timer'){ renderTimer(); renderCal(); }
 }
 $('#menuBtn').onclick = () => drawer(true);
 $('#scrim').onclick = () => drawer(false);
@@ -236,33 +274,30 @@ function renderHome(){
 
 /* ---------- AI 탭 ---------- */
 const uid = () => Math.random().toString(36).slice(2, 9);
-const newTab = (provider) => ({id: uid(), name: '새 대화', provider: provider || 'gemini', msgs: []});
+const newTab = p => ({id: uid(), name: '새 대화', provider: p || 'gemini', msgs: []});
 let tabs = store.get('tabs', null);
 if(!tabs || !tabs.length) tabs = [newTab()];
 let active = store.get('activeTab', tabs[0].id);
 if(!tabs.some(t => t.id === active)) active = tabs[0].id;
+const pending = new Set();
 const cur = () => tabs.find(t => t.id === active);
 const saveTabs = () => { store.set('tabs', tabs); store.set('activeTab', active); };
+const mk = (tag, cls, txt) => { const e = document.createElement(tag); if(cls) e.className = cls; if(txt != null) e.textContent = txt; return e; };
 
-function renderAI(){
-  const bar = $('#tabs'); bar.innerHTML = '';
+function renderTabs(){
+  const bar = $('#tabs'), f = document.createDocumentFragment();
   tabs.forEach(t => {
-    const el = document.createElement('div');
-    el.className = 'tab' + (t.id === active ? ' on' : '');
-    el.setAttribute('role', 'button'); el.tabIndex = 0;
-    const sp = document.createElement('span'); sp.textContent = t.name;
-    const x = document.createElement('button'); x.className = 'x'; x.textContent = '×'; x.setAttribute('aria-label', '탭 닫기');
+    const el = mk('div', 'tab' + (t.id === active ? ' on' : '')); el.setAttribute('role', 'button'); el.tabIndex = 0;
+    const x = mk('button', 'x', '×'); x.setAttribute('aria-label', '탭 닫기');
     x.onclick = ev => { ev.stopPropagation(); closeTab(t.id); };
-    el.append(sp, x);
+    el.append(mk('span', '', t.name), x);
     el.onclick = () => { active = t.id; saveTabs(); renderAI(); };
     el.onkeydown = ev => { if(ev.key === 'Enter') el.click(); };
-    bar.append(el);
+    f.append(el);
   });
-  const add = document.createElement('button'); add.className = 'add'; add.textContent = '+'; add.setAttribute('aria-label', '새 탭');
+  const add = mk('button', 'add', '+'); add.setAttribute('aria-label', '새 탭');
   add.onclick = () => { const t = newTab(cur().provider); tabs.push(t); active = t.id; saveTabs(); renderAI(); };
-  bar.append(add);
-  $('#prov').value = cur().provider;
-  renderMsgs();
+  f.append(add); bar.replaceChildren(f);
 }
 function closeTab(id){
   tabs = tabs.filter(t => t.id !== id);
@@ -271,31 +306,25 @@ function closeTab(id){
   saveTabs(); renderAI();
 }
 function renderMsgs(){
-  const box = $('#msgsIn'); box.innerHTML = '';
-  const t = cur();
-  if(!t.msgs.length){
-    const e = document.createElement('div'); e.className = 'empty'; e.textContent = '질문을 입력해 대화를 시작하세요.'; box.append(e);
-  }
-  t.msgs.forEach(m => {
-    const el = document.createElement('div');
-    el.className = 'msg ' + (m.r === 'u' ? 'u' : 'a') + (m.e ? ' e' : '');
-    el.textContent = m.t; box.append(el);
-  });
+  const t = cur(), f = document.createDocumentFragment();
+  if(!t.msgs.length && !pending.has(t.id)) f.append(mk('div', 'empty', '질문을 입력해 대화를 시작하세요.'));
+  t.msgs.forEach(m => f.append(mk('div', 'msg ' + (m.r === 'u' ? 'u' : 'a') + (m.e ? ' e' : ''), m.t)));
+  if(pending.has(t.id)) f.append(mk('div', 'msg a w', '생각하는 중…'));
+  $('#msgsIn').replaceChildren(f);
   const sc = $('#msgs'); sc.scrollTop = sc.scrollHeight;
 }
+function renderAI(){ renderTabs(); $('#prov').value = cur().provider; renderMsgs(); $('#send').disabled = pending.has(active); }
 $('#prov').onchange = e => { cur().provider = e.target.value; saveTabs(); };
-$('#clear').onclick = () => { const t = cur(); t.msgs = []; t.name = '새 대화'; saveTabs(); renderAI(); };
+$('#clear').onclick = () => { const t = cur(); if(pending.has(t.id)) return; t.msgs = []; t.name = '새 대화'; saveTabs(); renderAI(); };
 
 const cfg = () => store.get('cfg', {gemini:'', groq:'', mGemini:'gemini-flash-latest', mGroq:'llama-3.3-70b-versatile'});
-
 async function callAI(t){
-  const c = cfg();
-  const hist = t.msgs.filter(m => !m.e && m.t);
+  const c = cfg(), hist = t.msgs.filter(m => !m.e && m.t);
   if(t.provider === 'gemini'){
     if(!c.gemini) throw new Error('설정에서 Gemini API 키를 먼저 입력하세요.');
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(c.mGemini || 'gemini-flash-latest') + ':generateContent';
-    const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json', 'x-goog-api-key': c.gemini},
-      body: JSON.stringify({contents: hist.map(m => ({role: m.r === 'u' ? 'user' : 'model', parts:[{text: m.t}]}))})});
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(c.mGemini || 'gemini-flash-latest') + ':generateContent',
+      {method:'POST', headers:{'Content-Type':'application/json', 'x-goog-api-key': c.gemini},
+       body: JSON.stringify({contents: hist.map(m => ({role: m.r === 'u' ? 'user' : 'model', parts:[{text: m.t}]}))})});
     const j = await r.json();
     if(!r.ok) throw new Error((j.error && j.error.message) || ('요청 실패 (' + r.status + ')'));
     const p = j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
@@ -310,31 +339,20 @@ async function callAI(t){
   if(!r.ok) throw new Error((j.error && j.error.message) || ('요청 실패 (' + r.status + ')'));
   return j.choices[0].message.content;
 }
-
-let busy = false;
 async function send(){
-  const box = $('#ask'), q = box.value.trim();
-  if(!q || busy) return;
-  const t = cur();
+  const box = $('#ask'), q = box.value.trim(), t = cur();
+  if(!q || pending.has(t.id)) return;
   t.msgs.push({r:'u', t:q});
-  if(t.name === '새 대화') t.name = q.slice(0, 12);
+  if(t.name === '새 대화') t.name = q.slice(0, 14);
   box.value = ''; box.style.height = 'auto';
-  const wait = {r:'a', t:'생각하는 중…'}; t.msgs.push(wait);
-  busy = true; $('#send').disabled = true; saveTabs(); renderAI();
-  try{
-    t.msgs.pop();                       // 대기 문구 제외하고 기록을 보냄
-    const ans = await callAI(t);
-    t.msgs.push({r:'a', t:ans});
-  }catch(err){
-    t.msgs.push({r:'a', t:'오류: ' + err.message, e:true});
-  }
-  busy = false; $('#send').disabled = false; saveTabs();
-  if(t.id === active) renderAI();
+  pending.add(t.id); saveTabs(); renderAI();
+  try{ t.msgs.push({r:'a', t: await callAI(t)}); }
+  catch(err){ t.msgs.push({r:'a', t:'오류: ' + err.message, e:true}); }
+  pending.delete(t.id); saveTabs();
+  if(t.id === active) renderAI(); else renderTabs();
 }
 $('#send').onclick = send;
-$('#ask').addEventListener('keydown', e => {
-  if(e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); send(); }
-});
+$('#ask').addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); send(); } });
 $('#ask').addEventListener('input', e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 140) + 'px'; });
 
 /* ---------- 설정 ---------- */
@@ -361,6 +379,101 @@ $('#addq').onclick = () => {
   const a = store.get('myq', []); a.push(v); store.set('myq', a);
   $('#newq').value = ''; renderSettings(); renderHome(); toast('추가했어요');
 };
+
+/* ---------- 순공 타이머 ---------- */
+const CUT = () => { const v = parseInt(store.get('cut', 4), 10); return isNaN(v) ? 4 : v; };
+const pad = n => String(n).padStart(2, '0');
+const dkey = ts => { const d = new Date(ts - CUT() * 36e5); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const fmt = ms => { const s = Math.floor(ms / 1000); return pad(Math.floor(s / 3600)) + ':' + pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60); };
+const fmtm = ms => { const m = Math.round(ms / 6e4); return m >= 60 ? Math.floor(m / 60) + '시간 ' + (m % 60) + '분' : m + '분'; };
+let tm = store.get('tm', {run:null, subj:'s1', subjects:[{id:'s1', name:'공부'}], logs:[]});
+const saveTm = () => store.set('tm', tm);
+const subjName = id => { const x = tm.subjects.find(v => v.id === id); return tm.subjects.length > 1 && x ? ' · ' + x.name : ''; };
+
+function totals(){            // 날짜별 누적(ms). 새벽 기준 시각에서 하루가 바뀜
+  const out = {}, add = (s, e) => {
+    while(s < e){
+      const sh = new Date(s - CUT() * 36e5), nx = new Date(sh.getFullYear(), sh.getMonth(), sh.getDate() + 1).getTime() + CUT() * 36e5;
+      const end = Math.min(e, nx), k = dkey(s); out[k] = (out[k] || 0) + (end - s); s = end;
+    }
+  };
+  tm.logs.forEach(l => add(l.s, l.e));
+  if(tm.run) add(tm.run, Date.now());
+  return out;
+}
+function renderTimer(){
+  const now = Date.now(), run = tm.run, today = totals()[dkey(now)] || 0;
+  $('#tNow').textContent = fmt(run ? now - run : 0);
+  $('#tToday').textContent = '오늘 ' + fmt(today);
+  $('#tBtn').textContent = run ? '정지' : '시작';
+  $('#tBtn').classList.toggle('run', !!run);
+  $('#tWarn').textContent = run && now - run > 6 * 36e5 ? '6시간 넘게 측정 중이에요. 정지한 뒤 아래 기록에서 시간을 고치세요.' : '';
+  const sel = $('#tSubj');
+  if(sel.options.length !== tm.subjects.length){
+    sel.replaceChildren(...tm.subjects.map(v => { const o = mk('option', '', v.name); o.value = v.id; return o; }));
+  }
+  sel.value = tm.subj; sel.style.display = tm.subjects.length > 1 ? '' : 'none';
+}
+let wl = null;
+async function wake(){
+  try{
+    if($('#tWake').checked && tm.run && 'wakeLock' in navigator){ if(!wl) wl = await navigator.wakeLock.request('screen'); }
+    else if(wl){ await wl.release(); wl = null; }
+  }catch(e){ wl = null; }
+}
+document.addEventListener('visibilitychange', () => { if(!document.hidden){ wl = null; wake(); if($('#v-timer').classList.contains('on')) renderTimer(); } });
+$('#tWake').onchange = wake;
+$('#tBtn').onclick = () => {
+  if(tm.run){ const e = Date.now(); if(e - tm.run >= 5000) tm.logs.push({id: uid(), s: tm.run, e, subj: tm.subj}); tm.run = null; }
+  else tm.run = Date.now();
+  saveTm(); renderTimer(); renderCal(); wake();
+};
+$('#tSubj').onchange = e => { tm.subj = e.target.value; saveTm(); };
+$('#tAdd').onclick = () => {
+  const n = (prompt('추가할 과목 이름') || '').trim(); if(!n) return;
+  const id = uid(); tm.subjects.push({id, name: n}); tm.subj = id; saveTm(); renderTimer();
+};
+setInterval(() => { if($('#v-timer').classList.contains('on') && tm.run) renderTimer(); }, 1000);
+
+let cm = new Date(); cm = new Date(cm.getFullYear(), cm.getMonth(), 1);
+let selDay = dkey(Date.now());
+const sm = t => mk('button', 'sm', t);
+function renderCal(){
+  const map = totals(), y = cm.getFullYear(), m = cm.getMonth(), td = dkey(Date.now());
+  $('#cTitle').textContent = y + '년 ' + (m + 1) + '월';
+  const f = document.createDocumentFragment();
+  ['일','월','화','수','목','금','토'].forEach(w => f.append(mk('div', 'cw', w)));
+  for(let i = 0; i < new Date(y, m, 1).getDay(); i++) f.append(mk('div'));
+  for(let d = 1, last = new Date(y, m + 1, 0).getDate(); d <= last; d++){
+    const k = y + '-' + pad(m + 1) + '-' + pad(d), v = map[k] || 0, a = Math.min(v / (6 * 36e5), 1);
+    const b = mk('button', 'cd' + (k === selDay ? ' sel' : '') + (k === td ? ' today' : ''));
+    if(v){ b.style.background = 'rgba(255,138,31,' + (0.2 + 0.8 * a).toFixed(2) + ')'; b.style.color = a > .45 ? '#000' : '#fff'; }
+    b.append(mk('i', '', d), mk('small', '', v ? fmtm(v) : ''));
+    b.onclick = () => { selDay = k; renderCal(); };
+    f.append(b);
+  }
+  $('#cGrid').replaceChildren(f);
+  const box = $('#cDay'), hm = x => { const d = new Date(x); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  box.replaceChildren(mk('b', '', selDay.replace(/-/g, '.') + ' · ' + fmtm(map[selDay] || 0)));
+  tm.logs.filter(l => dkey(l.s) === selDay).sort((a, b) => a.s - b.s).forEach(l => {
+    const r = mk('div', 'logrow'), ed = sm('수정'), de = sm('삭제');
+    ed.onclick = () => { const n = parseInt(prompt('이 구간의 시간(분)', Math.round((l.e - l.s) / 6e4)), 10); if(n > 0){ l.e = l.s + n * 6e4; saveTm(); renderCal(); renderTimer(); } };
+    de.onclick = () => { if(confirm('이 기록을 삭제할까요?')){ tm.logs = tm.logs.filter(x => x.id !== l.id); saveTm(); renderCal(); renderTimer(); } };
+    r.append(mk('span', '', hm(l.s) + '–' + hm(l.e) + ' (' + fmtm(l.e - l.s) + ')' + subjName(l.subj)), ed, de); box.append(r);
+  });
+  const ad = sm('기록 추가'); ad.style.marginTop = '12px';
+  ad.onclick = () => {
+    const n = parseInt(prompt('추가할 시간(분)'), 10); if(!(n > 0)) return;
+    const p = selDay.split('-').map(Number), st = new Date(p[0], p[1] - 1, p[2], Math.max(CUT(), 12), 0).getTime();
+    tm.logs.push({id: uid(), s: st, e: st + n * 6e4, subj: tm.subj}); saveTm(); renderCal(); renderTimer();
+  };
+  box.append(ad);
+}
+$('#cPrev').onclick = () => { cm = new Date(cm.getFullYear(), cm.getMonth() - 1, 1); renderCal(); };
+$('#cNext').onclick = () => { cm = new Date(cm.getFullYear(), cm.getMonth() + 1, 1); renderCal(); };
+const _rs = renderSettings;
+renderSettings = function(){ _rs(); $('#cut').value = CUT(); };
+$('#saveKeys').addEventListener('click', () => { const v = parseInt($('#cut').value, 10); store.set('cut', isNaN(v) ? 4 : Math.min(Math.max(v, 0), 12)); });
 
 /* ---------- 시작 ---------- */
 renderHome(); go('home');
