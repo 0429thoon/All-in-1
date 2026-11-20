@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>UAIMC</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#000; --surface:#141414; --line:#262626; --fg:#fff; --mute:#9b9b9b; --acc:#ff8a1f; --accfg:#000;
+  --font:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic","Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.6;
+  padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0);
+  display:flex;flex-direction:column;overflow:hidden}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* 상단바 */
+.top{display:flex;align-items:center;gap:8px;height:56px;padding:0 8px;flex:none;border-bottom:1px solid var(--line)}
+.icon-btn{width:44px;height:44px;display:grid;place-items:center;border-radius:12px}
+.icon-btn:hover{background:var(--surface)}
+.top h1{font-size:18px;font-weight:700;letter-spacing:.02em}
+
+/* 메뉴 */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;bottom:0;left:0;width:min(300px,82vw);background:var(--surface);border-right:1px solid var(--line);
+  transform:translateX(-100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);z-index:30;padding:calc(env(safe-area-inset-top,0) + 16px) 12px 16px;display:flex;flex-direction:column;gap:2px}
+.drawer.on{transform:none}
+.drawer .brand{font-size:20px;font-weight:700;padding:8px 12px 16px}
+.nav{display:block;width:100%;text-align:left;padding:12px;border-radius:12px;font-size:16px;color:var(--mute)}
+.nav:hover{background:#1d1d1d;color:var(--fg)}
+.nav.on{background:var(--acc);color:var(--accfg);font-weight:700}
+.drawer .sp{flex:1}
+
+/* 화면 */
+main{flex:1;min-height:0;position:relative}
+.view{position:absolute;inset:0;overflow-y:auto;padding:20px 16px 32px;display:none}
+.view.on{display:block}
+.wrap{max-width:760px;margin:0 auto}
+h2{font-size:22px;margin-bottom:16px}
+.muted{color:var(--mute)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+
+/* 홈 */
+.date{color:var(--mute);margin-bottom:4px}
+.hello{font-size:28px;font-weight:700;margin-bottom:20px}
+.quote{border-left:4px solid var(--acc);border-radius:4px 16px 16px 4px}
+.quote p{font-size:20px;line-height:1.55;word-break:keep-all}
+.quote small{display:block;margin-top:8px;color:var(--mute)}
+.shortcuts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:20px}
+.shortcut{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;min-height:84px}
+.shortcut:hover{border-color:var(--acc)}
+.shortcut b{display:block}
+.shortcut span{color:var(--mute);font-size:14px}
+
+/* AI */
+#v-ai{padding:0;display:none;flex-direction:column}
+#v-ai.on{display:flex}
+.tabs{display:flex;align-items:center;gap:6px;padding:8px 12px;overflow-x:auto;flex:none;border-bottom:1px solid var(--line)}
+.tab{display:flex;align-items:center;gap:4px;flex:none;max-width:180px;padding:6px 6px 6px 14px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
+.tab span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab.on{background:var(--acc);border-color:var(--acc);color:var(--accfg);font-weight:700}
+.tab .x{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:none;line-height:1}
+.tab .x:hover{background:rgba(128,128,128,.35)}
+.add{flex:none;width:36px;height:36px;border-radius:50%;border:1px dashed var(--mute);color:var(--mute);font-size:20px}
+.add:hover{color:var(--acc);border-color:var(--acc)}
+.chatbar{display:flex;align-items:center;gap:8px;padding:8px 16px;flex:none;color:var(--mute);font-size:14px}
+.chatbar select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.chatbar .clear{margin-left:auto;color:var(--mute);padding:6px 10px;border-radius:10px}
+.chatbar .clear:hover{background:var(--surface);color:var(--fg)}
+.msgs{flex:1;min-height:0;overflow-y:auto;padding:8px 16px 16px}
+.msgs .in{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:88%;padding:10px 14px;border-radius:16px;white-space:pre-wrap;word-break:break-word}
+.msg.u{align-self:flex-end;background:var(--acc);color:var(--accfg);border-bottom-right-radius:4px}
+.msg.a{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.e{border-color:#a33;color:#ff9a9a}
+.empty{margin:auto;text-align:center;color:var(--mute);padding:40px 0}
+.inputbar{display:flex;gap:8px;padding:8px 16px 12px;flex:none;border-top:1px solid var(--line)}
+.inputbar .row{max-width:760px;margin:0 auto;width:100%;display:flex;gap:8px;align-items:flex-end}
+.inputbar textarea{flex:1;resize:none;max-height:140px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 14px}
+.send{height:44px;padding:0 20px;border-radius:16px;background:var(--acc);color:var(--accfg);font-weight:700}
+.send:disabled{opacity:.4;cursor:default}
+
+/* 설정 */
+label{display:block;margin:16px 0 6px;font-weight:700}
+.field{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.hint{color:var(--mute);font-size:14px;margin-top:4px}
+.btn{margin-top:16px;padding:10px 20px;border-radius:12px;background:var(--acc);color:var(--accfg);font-weight:700}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--fg)}
+.qlist{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.qitem{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid var(--line);border-radius:12px}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0) + 24px);transform:translate(-50%,20px);background:var(--fg);color:#000;padding:10px 18px;border-radius:999px;opacity:0;transition:.25s;z-index:40;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <button class="icon-btn" id="menuBtn" aria-label="메뉴 열기">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <h1 id="title">홈</h1>
+</header>
+
+<div class="scrim" id="scrim"></div>
+<nav class="drawer" id="drawer" aria-label="메뉴">
+  <div class="brand">UAIMC</div>
+  <button class="nav" data-go="home">홈</button>
+  <button class="nav" data-go="ai">AI</button>
+  <button class="nav" data-go="timer">순공 타이머</button>
+  <button class="nav" data-go="mock">모의고사</button>
+  <button class="nav" data-go="plan">주간 일정표</button>
+  <div class="sp"></div>
+  <button class="nav" data-go="settings">설정</button>
+</nav>
+
+<main>
+  <section class="view" id="v-home">
+    <div class="wrap">
+      <div class="date" id="date"></div>
+      <div class="hello">오늘도 한 걸음씩</div>
+      <div class="card quote"><p id="qtext"></p><small id="qsrc"></small></div>
+      <div class="shortcuts">
+        <button class="shortcut" data-go="ai"><b>AI에게 질문</b><span>탭으로 여러 대화</span></button>
+        <button class="shortcut" data-go="timer"><b>순공 타이머</b><span>준비 중</span></button>
+        <button class="shortcut" data-go="mock"><b>모의고사</b><span>준비 중</span></button>
+        <button class="shortcut" data-go="plan"><b>주간 일정표</b><span>준비 중</span></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-ai">
+    <div class="tabs" id="tabs"></div>
+    <div class="chatbar">
+      <label for="prov" style="margin:0;font-weight:400">AI</label>
+      <select id="prov"><option value="gemini">Gemini</option><option value="groq">Groq</option></select>
+      <button class="clear" id="clear">대화 지우기</button>
+    </div>
+    <div class="msgs" id="msgs"><div class="in" id="msgsIn"></div></div>
+    <div class="inputbar"><div class="row">
+      <textarea id="ask" rows="1" placeholder="질문을 입력하세요"></textarea>
+      <button class="send" id="send">보내기</button>
+    </div></div>
+  </section>
+
+  <section class="view" id="v-timer"><div class="wrap"><h2>순공 타이머</h2><div class="card muted">다음 버전에서 추가됩니다.</div></div></section>
+  <section class="view" id="v-mock"><div class="wrap"><h2>모의고사</h2><div class="card muted">다음 버전에서 추가됩니다.</div></div></section>
+  <section class="view" id="v-plan"><div class="wrap"><h2>주간 일정표</h2><div class="card muted">다음 버전에서 추가됩니다.</div></div></section>
+
+  <section class="view" id="v-settings">
+    <div class="wrap">
+      <h2>설정</h2>
+      <div class="card">
+        <b>AI 키</b>
+        <p class="hint">키는 이 기기의 브라우저에만 저장됩니다. 다른 사람과 공유하지 마세요.</p>
+        <label for="kGemini">Gemini API 키</label>
+        <input class="field" id="kGemini" type="password" autocomplete="off">
+        <label for="mGemini">Gemini 모델 이름</label>
+        <input class="field" id="mGemini" autocomplete="off">
+        <label for="kGroq">Groq API 키</label>
+        <input class="field" id="kGroq" type="password" autocomplete="off">
+        <label for="mGroq">Groq 모델 이름</label>
+        <input class="field" id="mGroq" autocomplete="off">
+        <p class="hint">모델 이름이 바뀌어 오류가 나면 각 서비스 문서에서 현재 이름을 확인해 여기에 입력하세요.</p>
+        <button class="btn" id="saveKeys">저장</button>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <b>내 명언</b>
+        <p class="hint">추가한 문구는 기본 문구와 함께 날짜별로 돌아가며 표시됩니다.</p>
+        <label for="newq" style="margin-top:12px">새 문구</label>
+        <input class="field" id="newq" autocomplete="off">
+        <button class="btn ghost" id="addq">추가</button>
+        <div class="qlist" id="qlist"></div>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('on'); setTimeout(() => el.classList.remove('on'), 1800); }
+
+/* ---------- 메뉴 / 화면 전환 ---------- */
+const TITLES = {home:'홈', ai:'AI', timer:'순공 타이머', mock:'모의고사', plan:'주간 일정표', settings:'설정'};
+function drawer(open){ $('#drawer').classList.toggle('on', open); $('#scrim').classList.toggle('on', open); }
+function go(name){
+  $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + name));
+  $$('.nav').forEach(n => n.classList.toggle('on', n.dataset.go === name));
+  $('#title').textContent = TITLES[name];
+  drawer(false);
+  if(name === 'ai') renderAI();
+  if(name === 'settings') renderSettings();
+}
+$('#menuBtn').onclick = () => drawer(true);
+$('#scrim').onclick = () => drawer(false);
+document.addEventListener('keydown', e => { if(e.key === 'Escape') drawer(false); });
+document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if(b) go(b.dataset.go); });
+
+/* ---------- 홈: 날짜 + 오늘의 명언 ---------- */
+const BASE_QUOTES = [
+  ['천 리 길도 한 걸음부터', '속담'], ['시작이 반이다', '속담'], ['티끌 모아 태산', '속담'],
+  ['낙숫물이 바위를 뚫는다', '속담'], ['공든 탑이 무너지랴', '속담'], ['급할수록 돌아가라', '속담'],
+  ['쇠뿔도 단김에 빼라', '속담'], ['우물을 파도 한 우물을 파라', '속담'], ['하늘은 스스로 돕는 자를 돕는다', '속담'],
+  ['오늘 할 일을 내일로 미루지 마라', '속담'], ['백 번 듣는 것이 한 번 보는 것만 못하다', '백문불여일견'],
+  ['아는 것은 좋아하는 것만 못하고, 좋아하는 것은 즐기는 것만 못하다', '논어'],
+  ['배우고 때때로 익히면 또한 기쁘지 아니한가', '논어'], ['배움은 멈출 수 없다', '순자'],
+  ['오늘 하루를 꾸준히 쌓으면 그것이 곧 실력이 된다', ''], ['완벽한 계획보다 지금 시작하는 한 시간이 낫다', ''],
+  ['어제의 나보다 한 문제 더 푼 오늘이면 충분하다', ''], ['쉬는 것도 계획의 일부다', '']
+];
+function todayQuote(){
+  const all = BASE_QUOTES.concat(store.get('myq', []).map(t => [t, '']));
+  const d = new Date(), day = Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 864e5);
+  return all[day % all.length];
+}
+function renderHome(){
+  const d = new Date();
+  $('#date').textContent = d.toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric', weekday:'long'});
+  const [t, s] = todayQuote();
+  $('#qtext').textContent = '“' + t + '”';
+  $('#qsrc').textContent = s;
+}
+
+/* ---------- AI 탭 ---------- */
+const uid = () => Math.random().toString(36).slice(2, 9);
+const newTab = (provider) => ({id: uid(), name: '새 대화', provider: provider || 'gemini', msgs: []});
+let tabs = store.get('tabs', null);
+if(!tabs || !tabs.length) tabs = [newTab()];
+let active = store.get('activeTab', tabs[0].id);
+if(!tabs.some(t => t.id === active)) active = tabs[0].id;
+const cur = () => tabs.find(t => t.id === active);
+const saveTabs = () => { store.set('tabs', tabs); store.set('activeTab', active); };
+
+function renderAI(){
+  const bar = $('#tabs'); bar.innerHTML = '';
+  tabs.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'tab' + (t.id === active ? ' on' : '');
+    el.setAttribute('role', 'button'); el.tabIndex = 0;
+    const sp = document.createElement('span'); sp.textContent = t.name;
+    const x = document.createElement('button'); x.className = 'x'; x.textContent = '×'; x.setAttribute('aria-label', '탭 닫기');
+    x.onclick = ev => { ev.stopPropagation(); closeTab(t.id); };
+    el.append(sp, x);
+    el.onclick = () => { active = t.id; saveTabs(); renderAI(); };
+    el.onkeydown = ev => { if(ev.key === 'Enter') el.click(); };
+    bar.append(el);
+  });
+  const add = document.createElement('button'); add.className = 'add'; add.textContent = '+'; add.setAttribute('aria-label', '새 탭');
+  add.onclick = () => { const t = newTab(cur().provider); tabs.push(t); active = t.id; saveTabs(); renderAI(); };
+  bar.append(add);
+  $('#prov').value = cur().provider;
+  renderMsgs();
+}
+function closeTab(id){
+  tabs = tabs.filter(t => t.id !== id);
+  if(!tabs.length) tabs = [newTab()];
+  if(!tabs.some(t => t.id === active)) active = tabs[0].id;
+  saveTabs(); renderAI();
+}
+function renderMsgs(){
+  const box = $('#msgsIn'); box.innerHTML = '';
+  const t = cur();
+  if(!t.msgs.length){
+    const e = document.createElement('div'); e.className = 'empty'; e.textContent = '질문을 입력해 대화를 시작하세요.'; box.append(e);
+  }
+  t.msgs.forEach(m => {
+    const el = document.createElement('div');
+    el.className = 'msg ' + (m.r === 'u' ? 'u' : 'a') + (m.e ? ' e' : '');
+    el.textContent = m.t; box.append(el);
+  });
+  const sc = $('#msgs'); sc.scrollTop = sc.scrollHeight;
+}
+$('#prov').onchange = e => { cur().provider = e.target.value; saveTabs(); };
+$('#clear').onclick = () => { const t = cur(); t.msgs = []; t.name = '새 대화'; saveTabs(); renderAI(); };
+
+const cfg = () => store.get('cfg', {gemini:'', groq:'', mGemini:'gemini-flash-latest', mGroq:'llama-3.3-70b-versatile'});
+
+async function callAI(t){
+  const c = cfg();
+  const hist = t.msgs.filter(m => !m.e && m.t);
+  if(t.provider === 'gemini'){
+    if(!c.gemini) throw new Error('설정에서 Gemini API 키를 먼저 입력하세요.');
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(c.mGemini || 'gemini-flash-latest') + ':generateContent';
+    const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json', 'x-goog-api-key': c.gemini},
+      body: JSON.stringify({contents: hist.map(m => ({role: m.r === 'u' ? 'user' : 'model', parts:[{text: m.t}]}))})});
+    const j = await r.json();
+    if(!r.ok) throw new Error((j.error && j.error.message) || ('요청 실패 (' + r.status + ')'));
+    const p = j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
+    if(!p) throw new Error('응답이 비어 있습니다. 질문을 바꿔 다시 시도해 보세요.');
+    return p.map(x => x.text || '').join('');
+  }
+  if(!c.groq) throw new Error('설정에서 Groq API 키를 먼저 입력하세요.');
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {method:'POST',
+    headers:{'Content-Type':'application/json', 'Authorization':'Bearer ' + c.groq},
+    body: JSON.stringify({model: c.mGroq || 'llama-3.3-70b-versatile', messages: hist.map(m => ({role: m.r === 'u' ? 'user' : 'assistant', content: m.t}))})});
+  const j = await r.json();
+  if(!r.ok) throw new Error((j.error && j.error.message) || ('요청 실패 (' + r.status + ')'));
+  return j.choices[0].message.content;
+}
+
+let busy = false;
+async function send(){
+  const box = $('#ask'), q = box.value.trim();
+  if(!q || busy) return;
+  const t = cur();
+  t.msgs.push({r:'u', t:q});
+  if(t.name === '새 대화') t.name = q.slice(0, 12);
+  box.value = ''; box.style.height = 'auto';
+  const wait = {r:'a', t:'생각하는 중…'}; t.msgs.push(wait);
+  busy = true; $('#send').disabled = true; saveTabs(); renderAI();
+  try{
+    t.msgs.pop();                       // 대기 문구 제외하고 기록을 보냄
+    const ans = await callAI(t);
+    t.msgs.push({r:'a', t:ans});
+  }catch(err){
+    t.msgs.push({r:'a', t:'오류: ' + err.message, e:true});
+  }
+  busy = false; $('#send').disabled = false; saveTabs();
+  if(t.id === active) renderAI();
+}
+$('#send').onclick = send;
+$('#ask').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); send(); }
+});
+$('#ask').addEventListener('input', e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 140) + 'px'; });
+
+/* ---------- 설정 ---------- */
+function renderSettings(){
+  const c = cfg();
+  $('#kGemini').value = c.gemini; $('#mGemini').value = c.mGemini;
+  $('#kGroq').value = c.groq; $('#mGroq').value = c.mGroq;
+  const list = $('#qlist'); list.innerHTML = '';
+  store.get('myq', []).forEach((q, i) => {
+    const row = document.createElement('div'); row.className = 'qitem';
+    const s = document.createElement('span'); s.textContent = q;
+    const b = document.createElement('button'); b.className = 'icon-btn'; b.textContent = '×'; b.setAttribute('aria-label', '삭제');
+    b.onclick = () => { const a = store.get('myq', []); a.splice(i, 1); store.set('myq', a); renderSettings(); renderHome(); };
+    row.append(s, b); list.append(row);
+  });
+}
+$('#saveKeys').onclick = () => {
+  store.set('cfg', {gemini: $('#kGemini').value.trim(), groq: $('#kGroq').value.trim(),
+    mGemini: $('#mGemini').value.trim() || 'gemini-flash-latest', mGroq: $('#mGroq').value.trim() || 'llama-3.3-70b-versatile'});
+  toast('저장했어요');
+};
+$('#addq').onclick = () => {
+  const v = $('#newq').value.trim(); if(!v) return;
+  const a = store.get('myq', []); a.push(v); store.set('myq', a);
+  $('#newq').value = ''; renderSettings(); renderHome(); toast('추가했어요');
+};
+
+/* ---------- 시작 ---------- */
+renderHome(); go('home');
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
