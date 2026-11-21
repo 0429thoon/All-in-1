@@ -110,6 +110,27 @@ h2{font-size:22px;margin-bottom:16px}
 .logrow span{flex:1}
 .sm{padding:6px 12px;border-radius:10px;border:1px solid var(--line);color:var(--fg)}
 .sm:hover{border-color:var(--acc)}
+/* 모의고사 */
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:12px}
+.cuts{margin-top:14px}
+a.btn{display:inline-block;text-decoration:none}
+.gcards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.gc{text-align:left;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.gc.on{border-color:var(--acc)}
+.gc b{display:block;font-size:18px}
+.gc small{display:block;margin-top:4px;color:var(--mute);font-size:12px;line-height:1.5}
+.seg{display:flex;gap:6px;margin:16px 0 8px}
+.seg button{padding:6px 14px;border:1px solid var(--line);border-radius:999px;color:var(--mute)}
+.seg button.on{background:var(--acc);border-color:var(--acc);color:#000;font-weight:700}
+.rh{margin:16px 0 8px;font-weight:700}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.rcard{position:relative;padding:24px 14px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.rdate{position:absolute;left:12px;top:6px;font-size:11px;color:var(--mute)}
+.rt{font-weight:700}
+.rs{display:flex;align-items:center;gap:8px;margin:4px 0 8px}
+.gb{padding:1px 10px;border-radius:999px;border:1px solid var(--acc);font-weight:700;font-size:14px}
+.gb.g1{background:var(--acc);color:#000}
+.racts{display:flex;gap:6px;margin-top:8px}
 /* 설정 */
 label{display:block;margin:16px 0 6px;font-weight:700}
 .field{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
@@ -153,7 +174,7 @@ label{display:block;margin:16px 0 6px;font-weight:700}
       <div class="shortcuts">
         <button class="shortcut" data-go="ai"><b>AI에게 질문</b><span>탭으로 여러 대화</span></button>
         <button class="shortcut" data-go="timer"><b>순공 타이머</b><span>시작/정지 · 달력</span></button>
-        <button class="shortcut" data-go="mock"><b>모의고사</b><span>준비 중</span></button>
+        <button class="shortcut" data-go="mock"><b>모의고사</b><span>성적 기록</span></button>
         <button class="shortcut" data-go="plan"><b>주간 일정표</b><span>준비 중</span></button>
       </div>
     </div>
@@ -188,7 +209,31 @@ label{display:block;margin:16px 0 6px;font-weight:700}
       <div id="cDay" style="margin-top:16px"></div>
     </div>
   </div></section>
-  <section class="view" id="v-mock"><div class="wrap"><h2>모의고사</h2><div class="card muted">다음 버전에서 추가됩니다.</div></div></section>
+  <section class="view" id="v-mock"><div class="wrap">
+    <h2>모의고사</h2>
+    <div class="card">
+      <b>시험 정보</b>
+      <div class="g4">
+        <select class="field" id="mG" aria-label="학년"></select>
+        <select class="field" id="mY" aria-label="연도"></select>
+        <select class="field" id="mM" aria-label="월"></select>
+        <select class="field" id="mS" aria-label="과목"></select>
+      </div>
+      <div class="cuts" id="mCut"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <b>내 점수</b>
+      <div class="g4">
+        <input class="field" id="mScore" type="number" inputmode="numeric" min="0" max="100" placeholder="점수">
+        <div id="mGradeRow"><select class="field" id="mGrade" aria-label="등급"></select></div>
+        <div id="mAuto" class="rt" style="align-self:center"></div>
+      </div>
+      <input class="field" id="mMemo" placeholder="메모 (선택과목, 시험 종류 등)" style="margin-top:8px">
+      <button class="btn" id="mSave">저장하기</button>
+    </div>
+    <div class="gcards" id="mCards"></div>
+    <div id="mDetail"></div>
+  </div></section>
   <section class="view" id="v-plan"><div class="wrap"><h2>주간 일정표</h2><div class="card muted">다음 버전에서 추가됩니다.</div></div></section>
 
   <section class="view" id="v-settings">
@@ -242,6 +287,7 @@ function go(name){
   if(name === 'ai') renderAI();
   if(name === 'settings') renderSettings();
   if(name === 'timer'){ renderTimer(); renderCal(); }
+  if(name === 'mock') renderMock();
 }
 $('#menuBtn').onclick = () => drawer(true);
 $('#scrim').onclick = () => drawer(false);
@@ -474,6 +520,161 @@ $('#cNext').onclick = () => { cm = new Date(cm.getFullYear(), cm.getMonth() + 1,
 const _rs = renderSettings;
 renderSettings = function(){ _rs(); $('#cut').value = CUT(); };
 $('#saveKeys').addEventListener('click', () => { const v = parseInt($('#cut').value, 10); store.set('cut', isNaN(v) ? 4 : Math.min(Math.max(v, 0), 12)); });
+
+/* ---------- 모의고사 ---------- */
+const ABS = {
+  '영어': {max: 100, fn: v => Math.min(9, Math.max(1, 10 - Math.floor(v / 10)))},
+  '한국사': {max: 50, fn: v => v >= 40 ? 1 : v < 5 ? 9 : 2 + Math.floor((39 - v) / 5)}
+};
+let subs = store.get('subs', ['국어', '수학', '영어', '한국사', '탐구']);
+let recs = store.get('recs', []);
+let editId = null, selG = null, mode = 'p';
+const GR = ['고1', '고2', '고3'], z2 = n => String(n).padStart(2, '0');
+const saveM = () => { store.set('subs', subs); store.set('recs', recs); };
+const opt = (v, t) => { const o = mk('option', '', t == null ? v : t); o.value = v; return o; };
+
+function mockInit(){
+  const now = new Date(), cy = now.getFullYear(), last = recs.length ? recs[recs.length - 1] : null;
+  $('#mG').replaceChildren(...GR.map(g => opt(g)));
+  $('#mY').replaceChildren(...Array.from({length: 8}, (_, i) => opt(cy + 1 - i, cy + 1 - i + '년')));
+  $('#mM').replaceChildren(...Array.from({length: 9}, (_, i) => opt(i + 3, i + 3 + '월')));
+  $('#mGrade').replaceChildren(opt('', '등급 선택'), ...Array.from({length: 9}, (_, i) => opt(i + 1, i + 1 + '등급')));
+  $('#mG').value = last ? last.g : '고1'; $('#mY').value = cy; $('#mM').value = Math.min(11, Math.max(3, now.getMonth() + 1));
+  ['#mG', '#mY', '#mM', '#mS'].forEach(id => $(id).onchange = mockUpdate);
+  $('#mScore').oninput = autoGrade; $('#mSave').onclick = saveRec;
+}
+function fillSubs(){
+  const el = $('#mS'), v = el.value;
+  el.replaceChildren(...subs.map(x => opt(x)));
+  if(subs.includes(v)) el.value = v;
+}
+function mockUpdate(){
+  const g = $('#mG').value, y = $('#mY').value, m = $('#mM').value, sb = $('#mS').value, box = $('#mCut');
+  box.replaceChildren();
+  if(ABS[sb]) box.append(mk('p', 'hint', sb + '은(는) 절대평가라 점수만 넣으면 등급이 자동으로 계산돼요.'));
+  else {
+    const q = y + ' ' + g + ' ' + m + '월 ' + sb + ' 등급컷';
+    const a = mk('a', 'btn', '네이버에서 등급컷 검색');
+    a.href = 'https://search.naver.com/search.naver?query=' + encodeURIComponent(q); a.target = '_blank'; a.rel = 'noopener';
+    box.append(a, mk('p', 'hint', '검색어: ' + q));
+  }
+  $('#mGradeRow').style.display = ABS[sb] ? 'none' : '';
+  autoGrade();
+}
+function autoGrade(){
+  const ab = ABS[$('#mS').value], v = parseInt($('#mScore').value, 10);
+  $('#mAuto').textContent = ab && !isNaN(v) && v >= 0 && v <= ab.max ? '등급 ' + ab.fn(v) : '';
+}
+function saveRec(){
+  const g = $('#mG').value, y = +$('#mY').value, m = +$('#mM').value, sb = $('#mS').value, ab = ABS[sb];
+  const sc = parseInt($('#mScore').value, 10), max = ab ? ab.max : 100;
+  if(isNaN(sc) || sc < 0 || sc > max){ toast('점수를 확인하세요 (0~' + max + ')'); return; }
+  const gr = ab ? ab.fn(sc) : parseInt($('#mGrade').value, 10);
+  if(!gr){ toast('등급을 선택하세요'); return; }
+  const dup = recs.find(r => r.g === g && r.y === y && r.m === m && r.s === sb && r.id !== editId);
+  if(dup && !confirm('같은 시험 기록이 이미 있어요. 덮어쓸까요?')) return;
+  if(dup) recs = recs.filter(r => r.id !== dup.id);
+  const old = editId && recs.find(r => r.id === editId);
+  const rec = {id: old ? old.id : uid(), g, y, m, s: sb, sc, gr, memo: $('#mMemo').value.trim(), at: old ? old.at : Date.now()};
+  if(old) recs[recs.indexOf(old)] = rec; else recs.push(rec);
+  saveM(); editId = null; selG = g;
+  $('#mScore').value = ''; $('#mGrade').value = ''; $('#mMemo').value = ''; $('#mSave').textContent = '저장하기';
+  toast('저장했어요'); mockUpdate(); renderCards(); renderDetail();
+}
+function editRec(r){
+  editId = r.id;
+  if(![...$('#mS').options].some(o => o.value === r.s)) $('#mS').append(opt(r.s));
+  $('#mG').value = r.g; $('#mY').value = r.y; $('#mM').value = r.m; $('#mS').value = r.s;
+  $('#mScore').value = r.sc; $('#mGrade').value = r.gr; $('#mMemo').value = r.memo || '';
+  $('#mSave').textContent = '수정 저장'; mockUpdate(); $('#v-mock').scrollTo({top: 0, behavior: 'smooth'});
+}
+function recCard(r){
+  const c = mk('div', 'rcard'), d = new Date(r.at);
+  c.append(mk('div', 'rdate', d.getFullYear() + '.' + z2(d.getMonth() + 1) + '.' + z2(d.getDate())),
+    mk('div', 'rt', r.y + ' ' + r.g + ' ' + r.m + '월 ' + r.s));
+  const row = mk('div', 'rs'); row.append(mk('span', '', r.sc + '점'), mk('span', 'gb' + (r.gr === 1 ? ' g1' : ''), r.gr + '등급')); c.append(row);
+  if(r.memo) c.append(mk('div', 'hint', r.memo));
+  const acts = mk('div', 'racts'), ed = mk('button', 'sm', '수정'), de = mk('button', 'sm', '삭제');
+  ed.onclick = () => editRec(r);
+  de.onclick = () => { if(confirm('이 기록을 삭제할까요?')){ recs = recs.filter(x => x.id !== r.id); saveM(); renderCards(); renderDetail(); } };
+  acts.append(ed, de); c.append(acts); return c;
+}
+function renderCards(){
+  const f = document.createDocumentFragment();
+  GR.forEach(g => {
+    const rs = recs.filter(r => r.g === g), cnt = {};
+    rs.forEach(r => cnt[r.gr] = (cnt[r.gr] || 0) + 1);
+    const b = mk('button', 'gc' + (selG === g ? ' on' : ''));
+    b.append(mk('b', '', g), mk('small', '', rs.length ? Object.keys(cnt).sort((a, c) => a - c).map(k => k + '등급 ' + cnt[k] + '개').join(' · ') : '기록 없음'));
+    b.onclick = () => { selG = selG === g ? null : g; renderCards(); renderDetail(); };
+    f.append(b);
+  });
+  $('#mCards').replaceChildren(f);
+}
+function renderDetail(){
+  const box = $('#mDetail');
+  if(!selG){ box.replaceChildren(); return; }
+  const rs = recs.filter(r => r.g === selG), f = document.createDocumentFragment(), seg = mk('div', 'seg');
+  [['p', '기간별'], ['s', '과목별']].forEach(([k, t]) => { const b = mk('button', mode === k ? 'on' : '', t); b.onclick = () => { mode = k; renderDetail(); }; seg.append(b); });
+  f.append(seg);
+  if(!rs.length) f.append(mk('p', 'muted', '저장된 기록이 없어요.'));
+  else if(mode === 'p'){
+    [...new Set(rs.map(r => r.y))].sort((a, b) => b - a).forEach(y => {
+      [...new Set(rs.filter(r => r.y === y).map(r => r.m))].sort((a, b) => a - b).forEach(m => {
+        const g = mk('div', 'rgrid'); rs.filter(r => r.y === y && r.m === m).forEach(r => g.append(recCard(r)));
+        f.append(mk('div', 'rh', y + '년 ' + m + '월'), g);
+      });
+    });
+  } else {
+    [...new Set(subs.concat(rs.map(r => r.s)))].forEach(sb => {
+      const L = rs.filter(r => r.s === sb).sort((a, b) => a.y - b.y || a.m - b.m); if(!L.length) return;
+      const g = mk('div', 'rgrid'); L.forEach(r => g.append(recCard(r))); f.append(mk('div', 'rh', sb), g);
+    });
+  }
+  box.replaceChildren(f);
+}
+function renderMock(){ fillSubs(); mockUpdate(); renderCards(); renderDetail(); }
+
+function renderSubjCard(){
+  let c = $('#subjCard');
+  if(!c){ c = mk('div', 'card'); c.id = 'subjCard'; c.style.marginTop = '16px'; $('#v-settings .wrap').append(c); }
+  const list = mk('div', 'qlist');
+  subs.forEach((sb, i) => {
+    const r = mk('div', 'qitem'), x = mk('button', 'icon-btn', '×'); x.setAttribute('aria-label', '삭제');
+    x.onclick = () => { if(subs.length > 1){ subs.splice(i, 1); saveM(); renderSubjCard(); } };
+    r.append(mk('span', '', sb), x); list.append(r);
+  });
+  const inp = mk('input', 'field'); inp.placeholder = '새 과목 이름'; inp.style.marginTop = '12px';
+  const add = mk('button', 'btn ghost', '추가');
+  add.onclick = () => { const v = inp.value.trim(); if(v && !subs.includes(v)){ subs.push(v); saveM(); renderSubjCard(); } };
+  const ex = mk('button', 'btn', '내보내기'), im = mk('button', 'btn ghost', '가져오기'), fi = mk('input');
+  fi.type = 'file'; fi.accept = '.json'; fi.style.display = 'none';
+  ex.onclick = () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify({recs, subs})], {type: 'application/json'}));
+    a.download = 'uaimc-mock-' + new Date().toISOString().slice(0, 10) + '.json'; a.click();
+  };
+  im.onclick = () => fi.click();
+  fi.onchange = () => {
+    const file = fi.files[0]; if(!file) return;
+    file.text().then(t => {
+      try{
+        const d = JSON.parse(t); if(!Array.isArray(d.recs)) throw 0;
+        const ids = new Set(recs.map(r => r.id));
+        d.recs.forEach(r => { if(r && r.id && !ids.has(r.id)) recs.push(r); });
+        (d.subs || []).forEach(sb => { if(!subs.includes(sb)) subs.push(sb); });
+        saveM(); toast('가져왔어요'); renderSubjCard();
+      }catch(e){ toast('파일을 읽을 수 없어요'); }
+    });
+    fi.value = '';
+  };
+  const row = mk('div'); row.style.display = 'flex'; row.style.gap = '8px'; row.append(ex, im, fi);
+  const hd = mk('b', '', '성적 데이터'); hd.style.display = 'block'; hd.style.marginTop = '20px';
+  c.replaceChildren(mk('b', '', '모의고사 과목'), mk('p', 'hint', '영어와 한국사는 이름이 같아야 절대평가 등급이 자동 계산돼요.'), list, inp, add, hd, mk('p', 'hint', '기록은 이 기기에만 저장돼요. 다른 기기로 옮길 때 사용하세요.'), row);
+}
+const _rs2 = renderSettings;
+renderSettings = function(){ _rs2(); renderSubjCard(); };
+mockInit();
 
 /* ---------- 시작 ---------- */
 renderHome(); go('home');
