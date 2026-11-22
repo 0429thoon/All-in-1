@@ -161,6 +161,13 @@ a.btn{display:inline-block;text-decoration:none}
 .ptitle:hover{background:var(--surface)}
 .cd small.dot{color:var(--acc);font-size:8px}
 .qitem .rm{flex:none;min-width:28px;height:28px;border-radius:6px;color:var(--mute)}
+/* 시험 타이머 */
+.ring{position:relative;width:min(78vw,320px);aspect-ratio:1;margin:12px auto}
+.ring svg{width:100%;height:100%;display:block}
+.rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.rt2{font-size:clamp(36px,12vw,60px);font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.playbtn{width:64px;height:64px;border-radius:50%;background:var(--acc);color:#000;display:grid;place-items:center}
+.chip:disabled{opacity:.4;cursor:default}
 /* 설정 */
 label{display:block;margin:16px 0 6px;font-weight:700}
 .field{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
@@ -188,7 +195,7 @@ label{display:block;margin:16px 0 6px;font-weight:700}
   <div class="brand">UAIMC</div>
   <button class="nav" data-go="home">홈</button>
   <button class="nav" data-go="ai">AI</button>
-  <button class="nav" data-go="timer">순공 타이머</button>
+  <button class="nav" data-go="timer">시험 타이머</button>
   <button class="nav" data-go="mock">모의고사</button>
   <button class="nav" data-go="plan">주간 일정표</button>
   <div class="sp"></div>
@@ -204,7 +211,7 @@ label{display:block;margin:16px 0 6px;font-weight:700}
       <div class="card" id="hToday" style="margin-top:16px"></div>
       <div class="shortcuts">
         <button class="shortcut" data-go="ai"><b>AI에게 질문</b><span>탭으로 여러 대화</span></button>
-        <button class="shortcut" data-go="timer"><b>순공 타이머</b><span>시작/정지 · 달력</span></button>
+        <button class="shortcut" data-go="timer"><b>시험 타이머</b><span>시험 시간 맞추기</span></button>
         <button class="shortcut" data-go="mock"><b>모의고사</b><span>성적 기록</span></button>
         <button class="shortcut" data-go="plan"><b>주간 일정표</b><span>요일별 일정</span></button>
       </div>
@@ -225,20 +232,18 @@ label{display:block;margin:16px 0 6px;font-weight:700}
     </div></div>
   </section>
 
-  <section class="view" id="v-timer"><div class="wrap">
-    <div class="card tcard">
-      <div class="muted" id="tToday"></div>
-      <div class="big" id="tNow">00:00:00</div>
-      <div class="hint" id="tWarn"></div>
-      <div class="trow"><select class="field" id="tSubj"></select><button class="sm" id="tAdd">과목 추가</button></div>
-      <button class="send tbtn" id="tBtn">시작</button>
-      <label class="chk"><input type="checkbox" id="tWake"> 측정 중 화면 켜 두기</label>
+  <section class="view" id="v-timer"><div class="wrap" style="text-align:center">
+    <h2 style="text-align:left">시험 타이머</h2>
+    <div class="chips" id="exChips" style="justify-content:center"></div>
+    <div class="ring">
+      <svg viewBox="0 0 300 300" aria-hidden="true">
+        <circle cx="150" cy="150" r="130" fill="none" stroke="var(--line)" stroke-width="12"/>
+        <circle id="exArc" cx="150" cy="150" r="130" fill="none" stroke="var(--acc)" stroke-width="12" stroke-linecap="round" stroke-dasharray="816.814" stroke-dashoffset="0" transform="rotate(-90 150 150)"/>
+      </svg>
+      <div class="rc"><div class="rt2" id="exTime">00:00</div><button class="playbtn" id="exBtn" aria-label="시작"></button></div>
     </div>
-    <div class="card" style="margin-top:16px">
-      <div class="cnav"><button class="sm" id="cPrev" aria-label="이전 달">&lt;</button><b id="cTitle"></b><button class="sm" id="cNext" aria-label="다음 달">&gt;</button></div>
-      <div class="cgrid" id="cGrid"></div>
-      <div id="cDay" style="margin-top:16px"></div>
-    </div>
+    <div class="hint" id="exInfo"></div>
+    <button class="sm" id="exReset" style="display:none;margin-top:8px">초기화</button>
   </div></section>
   <section class="view" id="v-mock"><div class="wrap">
     <h2>모의고사</h2>
@@ -289,8 +294,6 @@ label{display:block;margin:16px 0 6px;font-weight:700}
         <label for="mGroq">Groq 모델 이름</label>
         <input class="field" id="mGroq" autocomplete="off">
         <p class="hint">모델 이름이 바뀌어 오류가 나면 각 서비스 문서에서 현재 이름을 확인해 여기에 입력하세요.</p>
-        <label for="cut">하루 시작 시각(시, 타이머 기록 기준)</label>
-        <input class="field" id="cut" type="number" min="0" max="12">
         <button class="btn" id="saveKeys">저장</button>
       </div>
       <div class="card" style="margin-top:16px">
@@ -315,7 +318,7 @@ const store = {
 function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('on'); setTimeout(() => el.classList.remove('on'), 1800); }
 
 /* ---------- 메뉴 / 화면 전환 ---------- */
-const TITLES = {home:'홈', ai:'AI', timer:'순공 타이머', mock:'모의고사', plan:'주간 일정표', settings:'설정'};
+const TITLES = {home:'홈', ai:'AI', timer:'시험 타이머', mock:'모의고사', plan:'주간 일정표', settings:'설정'};
 function drawer(open){ $('#drawer').classList.toggle('on', open); $('#scrim').classList.toggle('on', open); }
 function go(name){
   $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + name));
@@ -324,7 +327,7 @@ function go(name){
   drawer(false);
   if(name === 'ai') renderAI();
   if(name === 'settings') renderSettings();
-  if(name === 'timer'){ renderTimer(); renderCal(); }
+  if(name === 'timer') renderEx();
   if(name === 'mock') renderMock();
   if(name === 'plan') renderPlan();
   if(name === 'home') renderToday();
@@ -466,100 +469,140 @@ $('#addq').onclick = () => {
   $('#newq').value = ''; renderSettings(); renderHome(); toast('추가했어요');
 };
 
-/* ---------- 순공 타이머 ---------- */
-const CUT = () => { const v = parseInt(store.get('cut', 4), 10); return isNaN(v) ? 4 : v; };
-const pad = n => String(n).padStart(2, '0');
-const dkey = ts => { const d = new Date(ts - CUT() * 36e5); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
-const fmt = ms => { const s = Math.floor(ms / 1000); return pad(Math.floor(s / 3600)) + ':' + pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60); };
-const fmtm = ms => { const m = Math.round(ms / 6e4); return m >= 60 ? Math.floor(m / 60) + '시간 ' + (m % 60) + '분' : m + '분'; };
-let tm = store.get('tm', {run:null, subj:'s1', subjects:[{id:'s1', name:'공부'}], logs:[]});
-const saveTm = () => store.set('tm', tm);
-const subjName = id => { const x = tm.subjects.find(v => v.id === id); return tm.subjects.length > 1 && x ? ' · ' + x.name : ''; };
+/* ---------- 시험 타이머 ---------- */
+const DEF_PRE = [['국어', 80], ['수학', 100], ['영어', 45], ['한국사', 30], ['탐구', 40], ['내신', 50]];
+let presets = store.get('presets', null) || DEF_PRE.map(([n, m]) => ({id: uid(), n, m}));
+let ex = store.get('ex', null) || {p: presets[0].id, dur: presets[0].m * 6e4, left: presets[0].m * 6e4, end: 0, run: false, f10: false, fd: false};
+const saveEx = () => { store.set('ex', ex); store.set('presets', presets); };
+const exOpt = () => Object.assign({w10: true, awake: true}, store.get('exopt', {}));
+const RC = 816.814, curName = () => (presets.find(p => p.id === ex.p) || {n: '시험'}).n;
+const rem = () => ex.run ? Math.max(0, ex.end - Date.now()) : ex.left;
+const clock = ms => { const t = Math.ceil(ms / 1000), h = Math.floor(t / 3600); return (h ? h + ':' + z2(Math.floor(t % 3600 / 60)) : z2(Math.floor(t / 60))) + ':' + z2(t % 60); };
+const hhmm = ts => { const d = new Date(ts); return z2(d.getHours()) + ':' + z2(d.getMinutes()); };
+const PLAY = '<svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+const PAUSE = '<svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>';
 
-function totals(){            // 날짜별 누적(ms). 새벽 기준 시각에서 하루가 바뀜
-  const out = {}, add = (s, e) => {
-    while(s < e){
-      const sh = new Date(s - CUT() * 36e5), nx = new Date(sh.getFullYear(), sh.getMonth(), sh.getDate() + 1).getTime() + CUT() * 36e5;
-      const end = Math.min(e, nx), k = dkey(s); out[k] = (out[k] || 0) + (end - s); s = end;
-    }
-  };
-  tm.logs.forEach(l => add(l.s, l.e));
-  if(tm.run) add(tm.run, Date.now());
-  return out;
+function wavURL(sec, fn){
+  const sr = 8000, n = Math.floor(sr * sec), b = new DataView(new ArrayBuffer(44 + n * 2));
+  const w = (o, t) => [...t].forEach((c, i) => b.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); b.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); b.setUint32(16, 16, true); b.setUint16(20, 1, true); b.setUint16(22, 1, true);
+  b.setUint32(24, sr, true); b.setUint32(28, sr * 2, true); b.setUint16(32, 2, true); b.setUint16(34, 16, true); w(36, 'data'); b.setUint32(40, n * 2, true);
+  for(let i = 0; i < n; i++) b.setInt16(44 + i * 2, Math.round(fn(i / sr) * 32767), true);
+  return URL.createObjectURL(new Blob([b], {type: 'audio/wav'}));
 }
-function renderTimer(){
-  const now = Date.now(), run = tm.run, today = totals()[dkey(now)] || 0;
-  $('#tNow').textContent = fmt(run ? now - run : 0);
-  $('#tToday').textContent = '오늘 ' + fmt(today);
-  $('#tBtn').textContent = run ? '정지' : '시작';
-  $('#tBtn').classList.toggle('run', !!run);
-  $('#tWarn').textContent = run && now - run > 6 * 36e5 ? '6시간 넘게 측정 중이에요. 정지한 뒤 아래 기록에서 시간을 고치세요.' : '';
-  const sel = $('#tSubj');
-  if(sel.options.length !== tm.subjects.length){
-    sel.replaceChildren(...tm.subjects.map(v => { const o = mk('option', '', v.name); o.value = v.id; return o; }));
-  }
-  sel.value = tm.subj; sel.style.display = tm.subjects.length > 1 ? '' : 'none';
+let keep, beepW, beepE;
+function audioInit(){
+  if(keep) return;
+  keep = new Audio(wavURL(1, t => Math.sin(6.283 * 200 * t) * 0.002)); keep.loop = true;
+  beepW = new Audio(wavURL(0.6, t => t < 0.45 ? Math.sin(6.283 * 880 * t) * 0.7 : 0));
+  beepE = new Audio(wavURL(1.6, t => (t % 0.5) < 0.3 ? Math.sin(6.283 * 988 * t) * 0.7 : 0));
+}
+function startKeep(){
+  try{
+    keep.play().catch(() => {});
+    if('mediaSession' in navigator){
+      navigator.mediaSession.metadata = new MediaMetadata({title: '시험 타이머', artist: curName()});
+      navigator.mediaSession.playbackState = 'playing';
+      navigator.mediaSession.setActionHandler('pause', () => { if(ex.run) exToggle(); });
+      navigator.mediaSession.setActionHandler('play', () => { if(!ex.run) exToggle(); });
+    }
+  }catch(e){}
+}
+function stopKeep(){ try{ keep && keep.pause(); if('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; }catch(e){} }
+function notify(title, body){
+  try{
+    if('Notification' in window && Notification.permission === 'granted')
+      navigator.serviceWorker.ready.then(r => r.showNotification(title, {body, icon: 'icon-192.png', tag: 'uaimc-timer', renotify: true, vibrate: [300, 100, 300, 100, 300]}));
+  }catch(e){}
+  try{ if(navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]); }catch(e){}
 }
 let wl = null;
 async function wake(){
   try{
-    if($('#tWake').checked && tm.run && 'wakeLock' in navigator){ if(!wl) wl = await navigator.wakeLock.request('screen'); }
-    else if(wl){ await wl.release(); wl = null; }
+    if(ex.run && exOpt().awake && 'wakeLock' in navigator){
+      if(!wl){ wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => { wl = null; }); }
+    } else if(wl){ await wl.release(); wl = null; }
   }catch(e){ wl = null; }
 }
-document.addEventListener('visibilitychange', () => { if(!document.hidden){ wl = null; wake(); if($('#v-timer').classList.contains('on')) renderTimer(); } });
-$('#tWake').onchange = wake;
-$('#tBtn').onclick = () => {
-  if(tm.run){ const e = Date.now(); if(e - tm.run >= 5000) tm.logs.push({id: uid(), s: tm.run, e, subj: tm.subj}); tm.run = null; }
-  else tm.run = Date.now();
-  saveTm(); renderTimer(); renderCal(); wake();
-};
-$('#tSubj').onchange = e => { tm.subj = e.target.value; saveTm(); };
-$('#tAdd').onclick = () => {
-  const n = (prompt('추가할 과목 이름') || '').trim(); if(!n) return;
-  const id = uid(); tm.subjects.push({id, name: n}); tm.subj = id; saveTm(); renderTimer();
-};
-setInterval(() => { if($('#v-timer').classList.contains('on') && tm.run) renderTimer(); }, 1000);
-
-let cm = new Date(); cm = new Date(cm.getFullYear(), cm.getMonth(), 1);
-let selDay = dkey(Date.now());
-const sm = t => mk('button', 'sm', t);
-function renderCal(){
-  const map = totals(), y = cm.getFullYear(), m = cm.getMonth(), td = dkey(Date.now());
-  $('#cTitle').textContent = y + '년 ' + (m + 1) + '월';
-  const f = document.createDocumentFragment();
-  ['일','월','화','수','목','금','토'].forEach(w => f.append(mk('div', 'cw', w)));
-  for(let i = 0; i < new Date(y, m, 1).getDay(); i++) f.append(mk('div'));
-  for(let d = 1, last = new Date(y, m + 1, 0).getDate(); d <= last; d++){
-    const k = y + '-' + pad(m + 1) + '-' + pad(d), v = map[k] || 0, a = Math.min(v / (6 * 36e5), 1);
-    const b = mk('button', 'cd' + (k === selDay ? ' sel' : '') + (k === td ? ' today' : ''));
-    if(v){ b.style.background = 'rgba(255,138,31,' + (0.2 + 0.8 * a).toFixed(2) + ')'; b.style.color = a > .45 ? '#000' : '#fff'; }
-    b.append(mk('i', '', d), mk('small', '', v ? fmtm(v) : ''));
-    b.onclick = () => { selDay = k; renderCal(); };
-    f.append(b);
+function exToggle(){
+  audioInit();
+  if(ex.run){ ex.left = Math.max(0, ex.end - Date.now()); ex.run = false; stopKeep(); }
+  else{
+    if(ex.left <= 0 || ex.left === ex.dur){ ex.left = ex.dur; ex.f10 = false; }
+    ex.end = Date.now() + ex.left; ex.run = true; ex.fd = false;
+    startKeep();
+    if('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
   }
-  $('#cGrid').replaceChildren(f);
-  const box = $('#cDay'), hm = x => { const d = new Date(x); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
-  box.replaceChildren(mk('b', '', selDay.replace(/-/g, '.') + ' · ' + fmtm(map[selDay] || 0)));
-  tm.logs.filter(l => dkey(l.s) === selDay).sort((a, b) => a.s - b.s).forEach(l => {
-    const r = mk('div', 'logrow'), ed = sm('수정'), de = sm('삭제');
-    ed.onclick = () => { const n = parseInt(prompt('이 구간의 시간(분)', Math.round((l.e - l.s) / 6e4)), 10); if(n > 0){ l.e = l.s + n * 6e4; saveTm(); renderCal(); renderTimer(); } };
-    de.onclick = () => { if(confirm('이 기록을 삭제할까요?')){ tm.logs = tm.logs.filter(x => x.id !== l.id); saveTm(); renderCal(); renderTimer(); } };
-    r.append(mk('span', '', hm(l.s) + '–' + hm(l.e) + ' (' + fmtm(l.e - l.s) + ')' + subjName(l.subj)), ed, de); box.append(r);
-  });
-  const ad = sm('기록 추가'); ad.style.marginTop = '12px';
-  ad.onclick = () => {
-    const n = parseInt(prompt('추가할 시간(분)'), 10); if(!(n > 0)) return;
-    const p = selDay.split('-').map(Number), st = new Date(p[0], p[1] - 1, p[2], Math.max(CUT(), 12), 0).getTime();
-    tm.logs.push({id: uid(), s: st, e: st + n * 6e4, subj: tm.subj}); saveTm(); renderCal(); renderTimer();
-  };
-  box.append(ad);
+  saveEx(); renderEx(); wake();
 }
-$('#cPrev').onclick = () => { cm = new Date(cm.getFullYear(), cm.getMonth() - 1, 1); renderCal(); };
-$('#cNext').onclick = () => { cm = new Date(cm.getFullYear(), cm.getMonth() + 1, 1); renderCal(); };
-const _rs = renderSettings;
-renderSettings = function(){ _rs(); $('#cut').value = CUT(); };
-$('#saveKeys').addEventListener('click', () => { const v = parseInt($('#cut').value, 10); store.set('cut', isNaN(v) ? 4 : Math.min(Math.max(v, 0), 12)); });
+function exPick(id){
+  const p = presets.find(x => x.id === id); if(!p || ex.run) return;
+  ex = {p: id, dur: p.m * 6e4, left: p.m * 6e4, end: 0, run: false, f10: false, fd: false}; saveEx(); renderEx();
+}
+function exTick(){
+  if(!ex.run) return;
+  const r = rem(), o = exOpt();
+  if(r <= 0){
+    ex.run = false; ex.left = 0; ex.fd = true; ex.f10 = true; saveEx(); stopKeep(); wake();
+    try{ beepE.play(); }catch(e){} notify('시험 종료', curName()); renderEx(); return;
+  }
+  if(!ex.f10 && o.w10 && ex.dur > 6e5 && r <= 6e5){
+    ex.f10 = true; saveEx(); try{ beepW.play(); }catch(e){} notify('종료 10분 전', curName());
+  }
+  if($('#v-timer').classList.contains('on')) renderEx(true);
+}
+function renderEx(light){
+  const r = rem(), p = ex.dur ? Math.min(1, Math.max(0, 1 - r / ex.dur)) : 0;
+  $('#exTime').textContent = clock(r);
+  $('#exArc').style.strokeDashoffset = RC * p;
+  if(light) return;
+  $('#exChips').replaceChildren(...presets.map(x => {
+    const b = mk('button', 'chip' + (x.id === ex.p ? ' on' : ''), x.n + ' ' + x.m + '분'); b.disabled = ex.run; b.onclick = () => exPick(x.id); return b;
+  }));
+  const btn = $('#exBtn'); btn.innerHTML = ex.run ? PAUSE : PLAY; btn.setAttribute('aria-label', ex.run ? '일시정지' : '시작');
+  $('#exInfo').textContent = ex.run ? '종료 예정 ' + hhmm(ex.end) : ex.fd ? '시험 종료!' : ex.left !== ex.dur ? '일시정지' : '';
+  $('#exReset').style.display = !ex.run && ex.left !== ex.dur ? '' : 'none';
+}
+$('#exBtn').onclick = exToggle;
+$('#exReset').onclick = () => { if(ex.run) return; ex.left = ex.dur; ex.f10 = false; ex.fd = false; stopKeep(); saveEx(); renderEx(); wake(); };
+setInterval(exTick, 500);
+document.addEventListener('visibilitychange', () => { if(!document.hidden){ wake(); exTick(); if($('#v-timer').classList.contains('on')) renderEx(); } });
+
+function renderExCard(){
+  let c = $('#exCard');
+  if(!c){ c = mk('div', 'card'); c.id = 'exCard'; c.style.marginTop = '16px'; $('#v-settings .wrap').append(c); }
+  const o = exOpt();
+  const tog = (label, key) => {
+    const l = mk('label', 'chk'), i = mk('input'); i.type = 'checkbox'; i.checked = !!o[key];
+    i.onchange = () => { const n = exOpt(); n[key] = i.checked; store.set('exopt', n); if(key === 'awake') wake(); };
+    l.append(i, document.createTextNode(label)); l.style.justifyContent = 'flex-start'; return l;
+  };
+  const list = mk('div', 'qlist');
+  presets.forEach(p => {
+    const r = mk('div', 'qitem'), n = mk('input', 'field'), m = mk('input', 'field'), x = mk('button', 'icon-btn', '×');
+    n.value = p.n; n.style.flex = '1'; m.type = 'number'; m.min = 1; m.value = p.m; m.style.width = '76px'; x.setAttribute('aria-label', '삭제');
+    n.onchange = () => { p.n = n.value.trim() || p.n; saveEx(); renderEx(); };
+    m.onchange = () => {
+      const v = parseInt(m.value, 10);
+      if(v > 0){ p.m = v; if(ex.p === p.id && !ex.run && ex.left === ex.dur){ ex.dur = ex.left = v * 6e4; } saveEx(); renderEx(); }
+    };
+    x.onclick = () => {
+      if(presets.length < 2) return;
+      presets = presets.filter(y => y.id !== p.id);
+      if(ex.p === p.id && !ex.run) exPick(presets[0].id); else saveEx();
+      renderExCard(); renderEx();
+    };
+    r.append(n, m, mk('span', 'hint', '분'), x); list.append(r);
+  });
+  const an = mk('input', 'field'), am = mk('input', 'field'), add = mk('button', 'btn ghost', '추가');
+  an.placeholder = '새 이름'; am.type = 'number'; am.placeholder = '분'; am.min = 1; am.style.width = '76px';
+  const ar = mk('div'); ar.style.cssText = 'display:flex;gap:8px;margin-top:12px'; an.style.flex = '1'; ar.append(an, am);
+  add.onclick = () => { const v = parseInt(am.value, 10), t = an.value.trim(); if(t && v > 0){ presets.push({id: uid(), n: t, m: v}); saveEx(); renderExCard(); renderEx(); } };
+  c.replaceChildren(mk('b', '', '시험 타이머'), tog(' 종료 10분 전에 알림', 'w10'), tog(' 측정 중 화면 켜 두기', 'awake'),
+    mk('p', 'hint', '알림은 브라우저에서 허용해야 울려요. 시간 목록은 이름과 분을 직접 고칠 수 있어요.'), list, ar, add);
+}
+const _rs3 = renderSettings;
+renderSettings = function(){ _rs3(); renderExCard(); };
 
 /* ---------- 모의고사 ---------- */
 const ABS = {
